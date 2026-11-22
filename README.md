@@ -25,7 +25,7 @@ jobs:
 
 ## Check for drift every day
 
-Create the lock file once (`pipx install git+https://github.com/anardimontlv/mcpwatch && mcpwatch lock .mcp.json`),
+Create the lock file once (`pipx install mcpwatch-io && mcpwatch lock .mcp.json`),
 commit `mcpwatch.lock`, then:
 
 ```yaml
