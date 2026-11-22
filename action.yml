@@ -1,4 +1,4 @@
-name: mcpwatch
+name: mcpwatch MCP security check
 description: Scan MCP configs for risky setups, and fail CI when the tools of a pinned MCP server change (rug-pull radar).
 author: mcpwatch
 branding: { icon: shield, color: green }
