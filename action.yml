@@ -1,0 +1,34 @@
+name: mcpwatch
+description: Scan MCP configs for risky setups, and fail CI when the tools of a pinned MCP server change (rug-pull radar).
+author: mcpwatch
+branding: { icon: shield, color: green }
+inputs:
+  config: { description: "Path to the MCP config (.mcp.json, mcp.json, claude_desktop_config.json)", default: .mcp.json }
+  mode: { description: "scan (static checks) or check (compare against the lock file; run it on a schedule)", default: scan }
+  lock: { description: Lock file for check mode, default: mcpwatch.lock }
+  fail-on: { description: "scan mode: fail at this severity or above (low, medium, high, critical)", default: high }
+runs:
+  using: composite
+  steps:
+    - name: install mcpwatch (pinned)
+      shell: bash
+      # own venv: works on runners whose system Python refuses pip installs (PEP 668) and leaves the user's env alone
+      run: |
+        python3 -m venv "$RUNNER_TEMP/mcpwatch-venv"
+        "$RUNNER_TEMP/mcpwatch-venv/bin/pip" install --quiet --disable-pip-version-check "mcpwatch @ git+https://github.com/anardimontlv/mcpwatch@v0.2.0"
+    - name: run mcpwatch
+      shell: bash
+      env:
+        MW_CONFIG: "${{ inputs.config }}"
+        MW_MODE: "${{ inputs.mode }}"
+        MW_LOCK: "${{ inputs.lock }}"
+        MW_FAIL: "${{ inputs.fail-on }}"
+        MW_BIN: "${{ runner.temp }}/mcpwatch-venv/bin"
+      # console scripts run with the venv's Python and its own sys.path, so the scanned repo can't shadow mcpwatch.
+      # GitHub's bash shell uses pipefail, so tee does not hide the exit code.
+      run: |
+        case "$MW_MODE" in
+          scan)  "$MW_BIN/mcpwatch-scan" "$MW_CONFIG" --format md --fail-on "$MW_FAIL" | tee -a "$GITHUB_STEP_SUMMARY" ;;
+          check) "$MW_BIN/mcpwatch" check "$MW_CONFIG" --lock "$MW_LOCK" | sed 's/^/    /' | tee -a "$GITHUB_STEP_SUMMARY" ;;  # indented = literal block
+          *)     echo "mode must be scan or check" >&2; exit 2 ;;
+        esac
