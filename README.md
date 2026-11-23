@@ -44,3 +44,16 @@ Exit codes: 0 OK, 1 findings at or above `fail-on` (scan) or drift (check), 2 ba
 Docs, rules and methodology: https://github.com/anardimontlv/mcpwatch · Index and radar: https://www.mcpwatch.io
 
 Apache-2.0.
+
+## Team: org view and policy
+
+Report each repo's MCP servers to your mcpwatch Team dashboard and fail the job on policy violations
+(no plain HTTP, pinned packages, minimum grade, ...). Only public server ids and rule codes are sent:
+never your config contents, server names, URLs or secrets. Create the key on https://www.mcpwatch.io/watch.
+
+```yaml
+- uses: anardimontlv/mcpwatch-action@v1
+  with:
+    mode: report
+    report-key: ${{ secrets.MCPWATCH_REPORT_KEY }}
+```
